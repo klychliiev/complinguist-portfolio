@@ -117,7 +117,7 @@ async def main():
    await client.disconnect()
 
 
-   with open('m.json', 'w') as outfile:
+   with open('data.json', 'w') as outfile:
        json.dump(posts_dict, outfile, ensure_ascii=False, indent=4)
 
 
