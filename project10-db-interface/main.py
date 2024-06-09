@@ -1,88 +1,28 @@
-import tkinter as tk
-from tkinter import ttk
-import sqlite3
+from nltk.corpus import wordnet as wn
+from itertools import combinations
 
-# Create the main window
-window = tk.Tk()
-window.title("Кличлієв Кирило, група №2, ЛР №2")
+# function to filter for similar words (those with path_similarity over 0.1)
+def cross_extra_word(*words):
+    
+    # retrieval of the first definition of each word
+    my_words = [wn.synsets(word)[0] for word in words]
 
-# Create a button
-button = ttk.Button(window, text="Отримати парадигми")
-button.grid(row=0, column=2, padx=10, pady=10)
+    # generation of the 2-word combinations for the input words for their further semantic comparison
+    word_combinations = combinations(my_words, 2)    
 
-# Create a label
-label = ttk.Label(window, text="Sample Label")
-label.grid(row=0, column=0, padx=10, pady=10)
+    # collecting the word pairs having the similarity over 0.1
+    similar_words = [[i[0], i[1]] for i in word_combinations if i[0].path_similarity(i[1]) > 0.1]    
+    #--> [[Synset('fork.n.01'), Synset('cup.n.01')], [Synset('fork.n.01'), Synset('spoon.n.01')], [Synset('cup.n.01'), Synset('spoon.n.01')]]
 
-# Create a combobox
-combo_var = tk.StringVar()
-combo = ttk.Combobox(window, textvariable=combo_var)
-combo.grid(row=1, column=0, padx=10, pady=10, sticky='n')
+    # extraction of semantically similar words
+    similar_words = set([element for innerList in similar_words for element in innerList])    
+    #--> {Synset('fork.n.01'), Synset('spoon.n.01'), Synset('cup.n.01')}
 
-# Create a treeview (table)
-columns = ('ID', 'sgN', 'plL')
-tree = ttk.Treeview(window, columns=columns, show='headings')
-tree.grid(row=1, column=1, columnspan=3, padx=10, pady=10)
+    print(similar_words)   
 
-tree.heading("ID", text="ID")
-tree.heading("sgN", text="sgN")
-tree.heading("plL", text="plL")
-
-# Connect to the SQLite database
-DATABASE_PATH = "pol_lab07.s3db"
-conn = sqlite3.connect(DATABASE_PATH)
-cursor = conn.cursor()
-
-# Function to execute the first SQL query
-def get_sgn_word():
-    query = "SELECT sgN FROM tnoun LIMIT 1"
-    cursor.execute(query)
-    result = cursor.fetchone()
-    label.config(text=result[0])
-
-get_sgn_word()
-
-# Function to execute the second SQL query
-def get_word_starting_with_g():
-    query = "SELECT sgN FROM tnoun WHERE sgN LIKE 'g%' LIMIT 1"
-    cursor.execute(query)
-    result = cursor.fetchone()
-    label.config(text=result[0])
-
-get_word_starting_with_g()
-
-# Function to fill the table with data
-def fill_table():
-    query = "SELECT id, sgN, plL FROM tnoun LIMIT 12"
-    cursor.execute(query)
-    data = cursor.fetchall()
-    for i, row in enumerate(data, start=1):
-        tree.insert('', tk.END, values=(i, row[1], row[2]))
-
-button.config(command=fill_table)
-
-# Function to fill the table with data and dashes
-def fill_dashes():
-    query = "SELECT id, sgN, plL FROM tnoun LIMIT 12"
-    cursor.execute(query)
-    data = cursor.fetchall()
-    for i, row in enumerate(data, start=1):
-        other_case = row[2] if row[2] else "-"
-        tree.insert("", i, values=(i, row[1], other_case))
-
-button.config(command=fill_dashes)
-
-# Function to load words starting with 'g' into the combobox
-def load_tnoun_to_combo():
-    query = "SELECT sgN FROM tnoun WHERE sgN LIKE 'g%'"
-    cursor.execute(query)
-    tnoun = cursor.fetchall()
-    combo['values'] = [word[0] for word in tnoun]
-
-load_tnoun_to_combo()
-
-# Start the main loop
-window.mainloop()
-
-# Close the database connection
-conn.close()
+# the output returns synsets of semantically similar words. extra words are specified in the comment after each function call
+cross_extra_word('love', 'hate', 'cat', 'flag', 'puzzle')    # cat, flag, puzzle
+cross_extra_word('fork', 'cup', 'spoon', 'beer')    # beer
+cross_extra_word('dog', 'cat', 'flame')    # flame
+cross_extra_word('pasta', 'pizza', 'lasagna', 'italian')    # italian
+cross_extra_word('tomato', 'onion', 'banana', 'lemon')    # banana
