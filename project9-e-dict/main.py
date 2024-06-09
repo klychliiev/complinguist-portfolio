@@ -119,7 +119,7 @@ create_database()
 
 # Main application window
 root = tk.Tk()
-root.title("Кличлієв Кирило, група №2, ЛР№3")
+root.title("Електронний шведсько-український словник")
 
 # Notebook for tabs
 notebook = ttk.Notebook(root)
